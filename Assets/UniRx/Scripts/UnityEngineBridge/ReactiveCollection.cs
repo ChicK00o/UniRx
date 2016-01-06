@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 
 namespace UniRx
 {
-    public struct CollectionAddEvent<T> : IEquatable<CollectionAddEvent<T>>
+    public struct CollectionAddEvent<T> // : IEquatable<CollectionAddEvent<T>>
     {
         public int Index { get; private set; }
         public T Value { get; private set; }
@@ -31,7 +31,7 @@ namespace UniRx
         }
     }
 
-    public struct CollectionRemoveEvent<T> : IEquatable<CollectionRemoveEvent<T>>
+    public struct CollectionRemoveEvent<T> // : IEquatable<CollectionRemoveEvent<T>>
     {
         public int Index { get; private set; }
         public T Value { get; private set; }
@@ -58,7 +58,7 @@ namespace UniRx
         }
     }
 
-    public struct CollectionMoveEvent<T> : IEquatable<CollectionMoveEvent<T>>
+    public struct CollectionMoveEvent<T> // : IEquatable<CollectionMoveEvent<T>>
     {
         public int OldIndex { get; private set; }
         public int NewIndex { get; private set; }
@@ -87,7 +87,7 @@ namespace UniRx
         }
     }
 
-    public struct CollectionReplaceEvent<T> : IEquatable<CollectionReplaceEvent<T>>
+    public struct CollectionReplaceEvent<T> // : IEquatable<CollectionReplaceEvent<T>>
     {
         public int Index { get; private set; }
         public T OldValue { get; private set; }

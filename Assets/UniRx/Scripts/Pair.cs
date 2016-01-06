@@ -5,7 +5,7 @@ namespace UniRx
 {
     // Pair is used for Observable.Pairwise
     [Serializable]
-    public struct Pair<T> : IEquatable<Pair<T>>
+    public struct Pair<T> // : IEquatable<Pair<T>>
     {
         readonly T previous;
         readonly T current;

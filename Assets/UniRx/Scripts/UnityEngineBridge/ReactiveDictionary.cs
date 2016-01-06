@@ -5,7 +5,7 @@ using System.Runtime.Serialization;
 
 namespace UniRx
 {
-    public struct DictionaryAddEvent<TKey, TValue> : IEquatable<DictionaryAddEvent<TKey,TValue>>
+    public struct DictionaryAddEvent<TKey, TValue>// : IEquatable<DictionaryAddEvent<TKey,TValue>>
     {
         public TKey Key { get; private set; }
         public TValue Value { get; private set; }
@@ -32,7 +32,7 @@ namespace UniRx
         }
     }
 
-    public struct DictionaryRemoveEvent<TKey, TValue> : IEquatable<DictionaryRemoveEvent<TKey,TValue>>
+    public struct DictionaryRemoveEvent<TKey, TValue>// : IEquatable<DictionaryRemoveEvent<TKey,TValue>>
     {
         public TKey Key { get; private set; }
         public TValue Value { get; private set; }
@@ -59,7 +59,7 @@ namespace UniRx
         }
     }
 
-    public struct DictionaryReplaceEvent<TKey, TValue> : IEquatable<DictionaryReplaceEvent<TKey,TValue>>
+    public struct DictionaryReplaceEvent<TKey, TValue>// : IEquatable<DictionaryReplaceEvent<TKey,TValue>>
     {
         public TKey Key { get; private set; }
         public TValue OldValue { get; private set; }
