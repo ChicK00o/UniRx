@@ -348,16 +348,17 @@ MonoBehaviour:
   V2R:
     value: {x: 0, y: 0}
   arrayC: []
+  TadanoRange: 5.33
   Intxxx:
-    value: 312
+    value: 6
   LongxXXX:
     value: 0
   Booxxx:
     value: 0
   FloAAX:
-    value: 0
+    value: 3.83
   DuAAX:
-    value: 0
+    value: 7.760000228881836
   MikanRP:
     value: 0
   Strrrrr:
@@ -381,7 +382,6 @@ MonoBehaviour:
       y: 0
       width: 0
       height: 0
-  only: {fileID: 811960238}
   SUPER_Rx:
     value:
       A: 0

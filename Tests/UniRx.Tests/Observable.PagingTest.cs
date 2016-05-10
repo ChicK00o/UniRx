@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using UniRx;
+using System.Threading;
 
 namespace UniRx.Tests
 {
@@ -216,6 +217,38 @@ namespace UniRx.Tests
                 result[1].xs.IsCollection(1000);
                 result[1].currentSpan.Is(x => TimeSpan.FromMilliseconds(4800) <= x && x <= TimeSpan.FromMilliseconds(5200));
             }
+        }
+
+        [TestMethod]
+        public void BufferTimeAndCountTimeSide()
+        {
+            var subject = new Subject<int>();
+            var record = subject.Buffer(TimeSpan.FromMilliseconds(100), 100).Take(5).Record();
+
+            Thread.Sleep(TimeSpan.FromSeconds(2));
+
+            record.Values.Count.Is(5);
+        }
+
+        [TestMethod]
+        public void BufferWindowBoundaries()
+        {
+            var subject = new Subject<int>();
+            var boundaries = new Subject<int>();
+
+            var record = subject.Buffer(boundaries).Record();
+
+            subject.OnNext(1);
+            subject.OnNext(2);
+            record.Values.Count.Is(0);
+
+            boundaries.OnNext(0);
+            record.Values.Count.Is(1);
+            record.Values[0].IsCollection(1, 2);
+
+            boundaries.OnNext(0);
+            record.Values.Count.Is(2);
+            record.Values[1].Count.Is(0);
         }
 
         [TestMethod]
@@ -922,6 +955,81 @@ namespace UniRx.Tests
             xs[1].Previous.Is(2); xs[1].Current.Is(3);
             xs[2].Previous.Is(3); xs[2].Current.Is(4);
             xs[3].Previous.Is(4); xs[3].Current.Is(5);
+        }
+
+        [TestMethod]
+        public void TakeLast()
+        {
+            var record = Observable.Range(1, 2).TakeLast(3).Record();
+            record.Values.IsCollection(1, 2);
+
+            record = Observable.Range(1, 3).TakeLast(3).Record();
+            record.Values.IsCollection(1, 2, 3);
+
+            record = Observable.Range(1, 4).TakeLast(3).Record();
+            record.Values.IsCollection(2, 3, 4);
+
+            record = Observable.Range(1, 10).TakeLast(3).Record();
+            record.Values.IsCollection(8, 9, 10);
+
+            record = Observable.Empty<int>().TakeLast(3).Record();
+            record.Notifications[0].Kind.Is(NotificationKind.OnCompleted);
+        }
+
+        [TestMethod]
+        public void TakeLastDuration()
+        {
+            var subject = new Subject<long>();
+
+            var record = subject.Record();
+            subject.OnCompleted();
+            record.Notifications[0].Kind.Is(NotificationKind.OnCompleted);
+
+            // 0, 200, 400, 600, 800
+            var data = Observable.Timer(TimeSpan.Zero, TimeSpan.FromMilliseconds(200))
+                .Take(5)
+                .TakeLast(TimeSpan.FromMilliseconds(250))
+                .ToArrayWait();
+
+            data.IsCollection(3, 4);
+        }
+
+        [TestMethod]
+        public void GroupBy()
+        {
+            var subject = new Subject<int>();
+
+            RecordObserver<int> a = null;
+            RecordObserver<int> b = null;
+            RecordObserver<int> c = null;
+            subject.GroupBy(x => x % 3)
+                .Subscribe(x =>
+                {
+                    if (x.Key == 0)
+                    {
+                        a = x.Record();
+                    }
+                    else if (x.Key == 1)
+                    {
+                        b = x.Record();
+                    }
+                    else if (x.Key == 2)
+                    {
+                        c = x.Record();
+                    }
+                });
+
+            subject.OnNext(99);
+            subject.OnNext(100);
+            subject.OnNext(101);
+
+            subject.OnNext(0);
+            subject.OnNext(1);
+            subject.OnNext(2);
+
+            a.Values.IsCollection(99, 0);
+            b.Values.IsCollection(100, 1);
+            c.Values.IsCollection(101, 2);
         }
     }
 }

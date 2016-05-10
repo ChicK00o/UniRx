@@ -1,3 +1,6 @@
+#if !(UNITY_4_0 || UNITY_4_1 || UNITY_4_2 || UNITY_4_3 || UNITY_4_4 || UNITY_4_5 || UNITY_4_6 || UNITY_5_0 || UNITY_5_1 || UNITY_5_2)
+#define SupportCustomYieldInstruction
+#endif
 #pragma warning disable 0414
 
 using UnityEngine;
@@ -12,6 +15,7 @@ using UniRx.Diagnostics;
 using System.Net;
 using System.IO;
 using System.Linq;
+
 #if !(UNITY_METRO || UNITY_WP8) && (UNITY_4_3 || UNITY_4_2 || UNITY_4_1 || UNITY_4_0_1 || UNITY_4_0 || UNITY_3_5 || UNITY_3_4 || UNITY_3_3 || UNITY_3_2 || UNITY_3_1 || UNITY_3_0_0 || UNITY_3_0 || UNITY_2_6_1 || UNITY_2_6)
     // Fallback for Unity versions below 4.5
     using Hash = System.Collections.Hashtable;
@@ -229,50 +233,6 @@ namespace UniRx.ObjectTest
     public class UniRxTestSandbox : MonoBehaviour
     {
 
-#if UNITY_5_3
-
-        public UnityEngine.UI.Button button;
-
-        static IEnumerator Enumerate<T>(IObservable<T> source)
-        {
-            Debug.Log("Start:" + Time.frameCount);
-
-            var yi = source.ToYieldInstruction(false);
-            yield return yi;
-            if (yi.HasError)
-            {
-                Debug.Log(yi.Error);
-            }
-            else
-            {
-                Debug.Log(yi.Result);
-            }
-
-            Debug.Log("End:" + Time.frameCount);
-        }
-
-
-        IEnumerator TestNewCustomYieldInstruction()
-        {
-            // wait Rx Observable.
-            yield return Observable.Timer(TimeSpan.FromSeconds(1)).ToYieldInstruction();
-
-            // you can change the scheduler(this is ignore Time.scale)
-            yield return Observable.Timer(TimeSpan.FromSeconds(1), Scheduler.MainThreadIgnoreTimeScale).ToYieldInstruction();
-
-            // get return value from ObservableYieldInstruction
-            var o = ObservableWWW.Get("http://unity3d.com/").ToYieldInstruction(throwOnError: false);
-            yield return o;
-
-            if (o.HasError) { Debug.Log(o.Error.ToString()); }
-            if (o.HasResult) { Debug.Log(o.Result); }
-
-            // other sample(wait until transform.position.y >= 100) 
-            yield return this.ObserveEveryValueChanged(x => x.transform).FirstOrDefault(x => x.position.y >= 100).ToYieldInstruction();
-        }
-
-#endif
-
 
         readonly static UniRx.Diagnostics.Logger logger = new UniRx.Diagnostics.Logger("UniRx.Test.NewBehaviour");
 
@@ -294,12 +254,21 @@ namespace UniRx.ObjectTest
 
         public StringReactiveCollection SerializableRxc;
 
+        [Range(1, 10)]
+        public float TadanoRange;
+
+        [RangeReactivePropertyAttribute(1, 10)]
         public IntReactiveProperty Intxxx;
         public LongReactiveProperty LongxXXX;
         public BoolReactiveProperty Booxxx;
+
+        [RangeReactivePropertyAttribute(1, 10)]
         public FloatReactiveProperty FloAAX;
+
+        [RangeReactivePropertyAttribute(1, 10)]
         public DoubleReactiveProperty DuAAX;
         public MikanReactiveProperty MikanRP;
+        [RangeReactivePropertyAttribute(1, 10)]
         public StringReactiveProperty Strrrrr;
 
         [Multiline]
@@ -323,8 +292,6 @@ namespace UniRx.ObjectTest
         public RectReactiveProperty EEE;
 
         // public Slider MySlider;
-        public CountOnly only;
-
         public MySuperStructReactiveProperty SUPER_Rx;
 
         public AnimationCurveReactiveProperty FFF;
@@ -335,30 +302,36 @@ namespace UniRx.ObjectTest
         {
             MainThreadDispatcher.Initialize();
 
+
+            Application.targetFrameRate = -1;
+
             //LogHelper.LogCallbackAsObservable()
             //    .ObserveOnMainThread()
             //    .Where(x => x.LogType == LogType.Exception)
             //    .Subscribe(x => logtext.AppendLine(x.ToString()));
 
-            //ObservableLogger.Listener.LogToUnityDebug();
-            //ObservableLogger.Listener.ObserveOnMainThread().Subscribe(x =>
-            //{
-            //    logtext.AppendLine(x.Message);
-            //});
+            ObservableLogger.Listener.LogToUnityDebug();
+            ObservableLogger.Listener.ObserveOnMainThread().Subscribe(x =>
+            {
+                logtext.AppendLine(x.Message);
+            });
 
 #if UNITY_5_3
 
-            button.OnClickAsObservable().Subscribe(_ =>
-            {
-                UnityEngine.Debug.Log("---");
-                Observable.EveryGameObjectUpdate().Subscribe(x => Debug.Log("EveryGameObjectUpdate" + x));
-                Observable.EveryUpdate().Subscribe(x => Debug.Log("EveryUpdate:" + x));
-                // Observable.EveryAfterUpdate().Subscribe(x => Debug.Log("EveryAfterUpdate:" + x));
-                Observable.EveryLateUpdate().Subscribe(x => Debug.Log("EveryLateUpdate:" + x));
-                Observable.EveryEndOfFrame().Subscribe(x => Debug.Log("EveryEndOfFrame:" + x));
-                UnityEngine.Debug.Log("---");
-            });
+            //button.OnClickAsObservable().Subscribe(_ =>
+            //{
+            //    UnityEngine.Debug.Log("---");
+            //    Observable.EveryGameObjectUpdate().Subscribe(x => Debug.Log("EveryGameObjectUpdate" + x));
+            //    Observable.EveryUpdate().Subscribe(x => Debug.Log("EveryUpdate:" + x));
+            //    // Observable.EveryAfterUpdate().Subscribe(x => Debug.Log("EveryAfterUpdate:" + x));
+            //    Observable.EveryLateUpdate().Subscribe(x => Debug.Log("EveryLateUpdate:" + x));
+            //    Observable.EveryEndOfFrame().Subscribe(x => Debug.Log("EveryEndOfFrame:" + x));
+            //    UnityEngine.Debug.Log("---");
+            //});
 #endif
+
+            FloAAX.Subscribe(x => Debug.Log("FloAAX:" + x));
+
         }
 
         CompositeDisposable disposables = new CompositeDisposable();
@@ -401,6 +374,16 @@ namespace UniRx.ObjectTest
         Subject<long> subj;
         object gate = new object();
 
+        int counter;
+        IEnumerator IncrCounter()
+        {
+            while (true)
+            {
+                yield return null;
+                counter++;
+            }
+        }
+
 
         public void OnGUI()
         {
@@ -414,26 +397,62 @@ namespace UniRx.ObjectTest
             }
             ypos += 100;
 
-            if (GUI.Button(new Rect(xpos, ypos, 100, 100), "Co"))
+            if (GUI.Button(new Rect(xpos, ypos, 100, 100), "StartCo"))
             {
+                stopwatch.Stop();
+                elapsed.Clear();
+                for (int i = 0; i < 10000; i++)
+                {
+                    Observable.FromCoroutine(IncrCounter).Subscribe().AddTo(disposables);
+                }
+                logger.Debug("StartCo");
+            }
+            ypos += 100;
 
+            if (GUI.Button(new Rect(xpos, ypos, 100, 100), "StartMicro"))
+            {
+                stopwatch.Stop();
+                elapsed.Clear();
+                for (int i = 0; i < 10000; i++)
+                {
+                    Observable.FromMicroCoroutine(IncrCounter).Subscribe().AddTo(disposables);
+                }
+                logger.Debug("StartMicro");
+            }
+            ypos += 100;
+
+            if (GUI.Button(new Rect(xpos, ypos, 100, 100), "Average"))
+            {
+                var avg = elapsed.Average(x => x.TotalMilliseconds) + "ms";
+                logger.Debug("Average:" + avg);
+            }
+            ypos += 100;
+
+            if (GUI.Button(new Rect(xpos, ypos, 100, 100), "ToYield"))
+            {
+                // StartCoroutine_Auto(ToYield());
             }
             ypos += 100;
 
             if (GUI.Button(new Rect(xpos, ypos, 100, 100), "Every"))
             {
-                Observable.EveryGameObjectUpdate().Subscribe(x => Debug.Log("EveryGameObjectUpdate" + x));
-                Observable.EveryUpdate().Subscribe(x => Debug.Log("EveryUpdate:" + x));
-                // Observable.EveryAfterUpdate().Subscribe(x => Debug.Log("EveryAfterUpdate:" + x));
-                UnityEngine.Debug.Log("---");
-                Observable.EveryLateUpdate().Subscribe(x => Debug.Log("EveryLateUpdate:" + x));
-                Observable.EveryEndOfFrame().Subscribe(x => Debug.Log("EveryEndOfFrame:" + x));
+                this.UpdateAsObservable().Take(1).Subscribe(__ =>
+                {
+                    UnityEngine.Debug.Log("Register Start");
+                    Observable.EveryGameObjectUpdate().Subscribe(x => Debug.Log("EveryGameObjectUpdate" + x));
+                    Observable.EveryUpdate().Subscribe(x => Debug.Log("EveryUpdate:" + x));
+                    Observable.EveryLateUpdate().Subscribe(x => Debug.Log("EveryLateUpdate:" + x));
+                    Observable.EveryEndOfFrame().Subscribe(x => Debug.Log("EveryEndOfFrame:" + x));
+                    Observable.EveryFixedUpdate().Subscribe(x => Debug.Log("EveryFixedUpdate:" + x));
+
+                    UnityEngine.Debug.Log("Register End");
+                });
             }
             ypos += 100;
 
-            if (GUI.Button(new Rect(xpos, ypos, 100, 100), "Select"))
+            if (GUI.Button(new Rect(xpos, ypos, 100, 100), "Delay"))
             {
-                Source.Select(x => x * 100).Subscribe(x => logger.Debug(x)).AddTo(disposables);
+                Observable.Return(100).DelayFrame(25, FrameCountType.Update).Subscribe(x => Debug.Log("delayed"));
             }
             ypos += 100;
 
@@ -865,6 +884,27 @@ namespace UniRx.ObjectTest
             // Log
             //GUI.Box(new Rect(Screen.width - 300, 0, 300, 300), "Log");
             //GUI.Label(new Rect(Screen.width - 290, 10, 290, 290), logtext.ToString());
+        }
+
+
+
+        List<TimeSpan> elapsed = new List<TimeSpan>();
+        System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
+
+        void Update()
+        {
+            stopwatch.Reset();
+            stopwatch.Start();
+        }
+
+        void LateUpdate()
+        {
+            if (stopwatch.IsRunning)
+            {
+                stopwatch.Stop();
+                elapsed.Add(stopwatch.Elapsed);
+                stopwatch.Reset();
+            }
         }
     }
 }
